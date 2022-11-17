@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Pool } = require('pg');
+const { Pool, Query } = require('pg');
 
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
@@ -31,7 +31,7 @@ const getUserWithEmail = (email) =>{
   const queryString = `
     SELECT *
     FROM users
-    WHERE users.email = $1`;
+    WHERE users.email = $1;`;
   return pool
     .query(
       queryString, [email])
@@ -146,14 +146,58 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = (options, limit = 10) => {
+  
+  let queryString = `
+    SELECT
+      properties.*,
+      avg(rating) as average_rating
+    FROM
+      properties
+      JOIN property_reviews on property_id = properties.id
+    `;
+  const queryParams = [];
 
-  const queryString = `
-  SELECT * FROM properties
-  LIMIT $1;
-  `;
+  if (options.city) {
+    queryParams.push(`%${options.city.slice(2)}%`);
+    queryString += `
+      WHERE city LIKE $${queryParams.length}`;
+  }
+
+  if (options.owner_id) {
+    queryParams.push(Number(options.owner_id));
+    queryString += `
+      ${queryParams.length > 0 ? 'AND' : 'WHERE'} owner_id = $${queryParams.length}`;
+  }
+
+  if (options.minimum_price_per_night) {
+    queryParams.push(100 * options.minimum_price_per_night);
+    queryString += `
+      ${queryParams.length > 0 ? 'AND' : 'WHERE'} cost_per_night >= $${queryParams.length}`;
+  }
+
+  if (options.maximum_price_per_night) {
+    queryParams.push(100 * options.maximum_price_per_night);
+    queryString += `
+      ${queryParams.length > 0 ? 'AND' : 'WHERE'} cost_per_night <= $${queryParams.length}`;
+  }
+
+  
+  queryString += `
+  GROUP BY properties.id`;
+  
+  if (options.minimum_rating) {
+    queryParams.push(options.minimum_rating);
+    queryString += `
+      HAVING avg(rating) >= $${queryParams.length}`;
+  }
+
+  queryParams.push(limit);
+  queryString += `
+    LIMIT $${queryParams.length};`;
+ 
   return pool
     .query(
-      queryString, [limit])
+      queryString, queryParams)
     .then((result) => {
       return result.rows;
     })
