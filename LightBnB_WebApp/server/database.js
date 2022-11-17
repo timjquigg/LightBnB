@@ -107,6 +107,7 @@ const getAllReservations = (guest_id, limit = 10) => {
       reservations.id,
       properties.*,
       reservations.start_date,
+      reservations.end_date,
       AVG(property_reviews.rating)
     FROM
       reservations
@@ -166,7 +167,7 @@ const getAllProperties = (options, limit = 10) => {
   if (options.owner_id) {
     queryParams.push(Number(options.owner_id));
     queryString += `
-      ${queryParams.length > 0 ? 'AND' : 'WHERE'} owner_id = $${queryParams.length}`;
+      WHERE owner_id = $${queryParams.length}`;
   }
 
   if (options.minimum_price_per_night) {
@@ -181,7 +182,6 @@ const getAllProperties = (options, limit = 10) => {
       ${queryParams.length > 0 ? 'AND' : 'WHERE'} cost_per_night <= $${queryParams.length}`;
   }
 
-  
   queryString += `
   GROUP BY properties.id`;
   
@@ -191,6 +191,8 @@ const getAllProperties = (options, limit = 10) => {
       HAVING avg(rating) >= $${queryParams.length}`;
   }
 
+  
+  
   queryParams.push(limit);
   queryString += `
     LIMIT $${queryParams.length};`;
@@ -214,9 +216,40 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  
+  const queryParams = Object.values(property);
+  
+  const queryString = `
+    INSERT INTO properties (
+      title,
+      description,
+      number_of_bedrooms,
+      number_of_bathrooms,
+      parking_spaces,
+      cost_per_night,
+      thumbnail_photo_url,
+      cover_photo_url,
+      street,
+      country,
+      city,
+      province,
+      post_code,
+      owner_id
+      )
+    VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+    )
+    RETURNING *;`;
+  
+  return pool
+    .query(
+      queryString, queryParams)
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+
 };
 exports.addProperty = addProperty;
