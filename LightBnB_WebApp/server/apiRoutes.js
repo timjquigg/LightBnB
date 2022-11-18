@@ -35,5 +35,8 @@ module.exports = function(router, database) {
       });
   });
 
+  router.get('/makeReservation', (req,res) => {
+    console.log(req.query);
+  });
   return router;
 };

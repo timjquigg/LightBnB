@@ -100,20 +100,20 @@ $(() => {
     }
   });
 
-  $newPropertyForm.on('submit', function (event) {
+  $newPropertyForm.on('submit', function(event) {
     event.preventDefault();
 
     views_manager.show('none');
 
     const data = $(this).serialize();
     submitProperty(data)
-    .then(() => {
-      views_manager.show('listings');
-    })
-    .catch((error) => {
-      console.error(error);
-      views_manager.show('listings');
-    })
+      .then(() => {
+        views_manager.show('listings');
+      })
+      .catch((error) => {
+        console.error(error);
+        views_manager.show('listings');
+      });
   });
 
   $('body').on('click', '#property-form__cancel', function() {
