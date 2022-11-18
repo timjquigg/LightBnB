@@ -1,6 +1,6 @@
 $(() => {
   
-  $('body').on('click', '.make_reservation',function() {
+  $('body').on('click', '.make_reservation', function() {
     propertyListings.clearListings();
     makeReservation({property_id:this.name})
       .then(function(json) {
@@ -13,8 +13,12 @@ $(() => {
   $('body').on('submit', '#reservation-form', function(event) {
     event.preventDefault();
     const data = $(this).serialize();
-    submitReservation(data);
+    submitReservation(data)
+      .then(() => {
+        $('body').find('header').find('.my_reservations_button').trigger('click');
+      });
   });
+
   window.propertyListing = {};
   
   

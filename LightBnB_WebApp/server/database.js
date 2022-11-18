@@ -101,7 +101,7 @@ exports.addUser = addUser;
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = (guest_id, limit = 10) => {
+const getAllReservations = (guest_id, limit = 30) => {
   const queryString = `
     SELECT
       reservations.id,
@@ -119,7 +119,7 @@ const getAllReservations = (guest_id, limit = 10) => {
       reservations.id,
       properties.id
     ORDER BY
-      reservations.start_date
+      reservations.start_date DESC
     LIMIT
       $2;`;
 
@@ -300,15 +300,29 @@ exports.getProperty = getProperty;
  * @return {Promise<{}>} A promise to the property.
  */
 const addReservation = function(options) {
+  const queryParams = [
+    options.start_date,
+    options.end_date,
+    options.property_id,
+    options.guest_id
+  ];
   const queryString = `
     INSERT INTO reservations(
       start_date,
       end_date,
       property_id,
       guest_id
-    ) 
-    ($1, $2, $3, $4);
-    `;
-
+    ) VALUES
+    ($1, $2, $3, $4)
+    RETURNING *;`;
+  return pool
+    .query(
+      queryString, queryParams)
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 exports.addReservation = addReservation;
