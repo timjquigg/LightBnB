@@ -268,3 +268,47 @@ const addProperty = function(property) {
 
 };
 exports.addProperty = addProperty;
+
+/**
+ * Get property for Reservation.
+ * @param {{}} options An object containing query options.
+ * @return {Promise<[{}]>}  A promise to the properties.
+ */
+const getProperty = (options) => {
+  const queryString = `
+    SELECT 
+      properties.*, avg(rating) as average_rating
+    FROM properties
+    JOIN property_reviews on properties.id = property_id
+    WHERE properties.id = $1
+    GROUP BY properties.id;`;
+  return pool
+    .query(
+      queryString, Object.values(options))
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+};
+exports.getProperty = getProperty;
+
+/**
+ * Add a reservation to the database
+ * @param {{}} options An object containing the property id & start & end dates.
+ * @return {Promise<{}>} A promise to the property.
+ */
+const addReservation = function(options) {
+  const queryString = `
+    INSERT INTO reservations(
+      start_date,
+      end_date,
+      property_id,
+      guest_id
+    ) 
+    ($1, $2, $3, $4);
+    `;
+
+};
+exports.addReservation = addReservation;

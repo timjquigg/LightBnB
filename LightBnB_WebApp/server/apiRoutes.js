@@ -36,7 +36,15 @@ module.exports = function(router, database) {
   });
 
   router.get('/makeReservation', (req,res) => {
-    console.log(req.query);
+    database.getProperty(req.query)
+      .then(property => res.send({property}));
   });
+
+  router.post('/makeReservation', (req, res) => {
+    console.log(req.body);
+    console.log('User: ', req.session.userId);
+  });
+
   return router;
 };
+

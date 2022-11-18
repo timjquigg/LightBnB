@@ -62,9 +62,17 @@ const submitProperty = function(data) {
 
 };
 const makeReservation = function(data) {
-  console.log(data);
   return $.ajax({
     method: "GET",
+    url: "/api/makeReservation",
+    data
+  });
+};
+
+const submitReservation = function(data) {
+  console.log(`${data} in network.js`);
+  return $.ajax({
+    method: "POST",
     url: "/api/makeReservation",
     data
   });
